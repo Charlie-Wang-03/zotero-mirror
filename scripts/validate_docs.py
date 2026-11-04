@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -77,6 +78,32 @@ def main() -> int:
     ):
         if not (workflows / required_workflow).exists():
             errors.append(f"missing onboarding workflow: {required_workflow}")
+
+    # Keep privileged workflow dependencies pinned to verified immutable commits.
+    # The action-version comments remain for maintainers; SHA is authoritative.
+    pinned_actions = {
+        "actions/checkout": "3d3c42e5aac5ba805825da76410c181273ba90b1",  # v7.0.1
+        "actions/setup-python": "6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",  # v7.1.0
+    }
+    workflow_names = (
+        "first-run.yml",
+        "instance-preflight.yml",
+        "manage-access-mode.yml",
+        "mirror-ci.yml",
+        "sync-zotero.yml",
+        "zotero-write.yml",
+    )
+    for name in workflow_names:
+        workflow_path = workflows / name
+        if not workflow_path.exists():
+            errors.append(f"missing workflow: {name}")
+            continue
+        source = workflow_path.read_text(encoding="utf-8")
+        references = re.findall(r"(?m)^\s*-\s+uses:\s+([^\s#]+)", source)
+        for action, sha in pinned_actions.items():
+            actual = [ref for ref in references if ref.startswith(f"{action}@")]
+            if actual != [f"{action}@{sha}"]:
+                errors.append(f"{name} requires pinned {action}@{sha}")
 
     if "vars.ZOTERO_MIRROR_ENABLED == 'true'" not in sync:
         errors.append("sync workflow must be opt-in")
