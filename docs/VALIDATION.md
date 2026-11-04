@@ -31,9 +31,15 @@ part of test teardown. We do not ship any associated user data or identifiers.
   not a verified native server-side "Add Note from Annotations" endpoint.
 - Native duplicate merging is not supported over the Zotero Web API.
 
-## Upstream CI
+## Offline upstream validation
 
-The release candidate requires:
+From a source checkout with Python 3.13 (no third-party packages):
+
+```bash
+python scripts/validate_project.py
+```
+
+This is the same entry point as **Upstream CI**. The offline suite checks:
 
 - all Python scripts compiling under the configured Python version;
 - rejection of real library files and credential-like content;
@@ -43,3 +49,12 @@ The release candidate requires:
 
 The regression workflow is scoped to the canonical source repository and is
 intentionally skipped in generated private user instances.
+
+**Scope:** this command does not need network access, Zotero credentials,
+or real library data. It does not run instance-specific `validate_import.py`
+(which needs `library/items.json`, collections and tags) or make live Zotero
+writes. `validate_post_write.py` is a separate runtime verifier for a
+configured instance; a skipped verification is not a pass of that operation.
+
+Green CI means these reproducible checks passed, **not** that a real user
+completed onboarding or that every API-dependent feature is live-verified.

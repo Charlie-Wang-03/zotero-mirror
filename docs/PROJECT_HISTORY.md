@@ -10,9 +10,9 @@ no private research identifiers or credentials.
   developed.
 - **2026-11-04:** Private canary tests confirmed initial read-only sync and
   two isolated create/read/patch/delete workflows.
-- **2026-11-04:** An earlier decision to discontinue the standalone public
-  product was superseded by a new decision to prepare a public, independent
-  release.
+- **2026-11-04:** The earlier discontinuation decision was superseded. The
+  reusable template was published from a clean independent Git root as a
+  public repository; this does not by itself constitute a tagged release.
 
 Public release must use a clean Git root. The historical private development
 repository is not itself a public release artifact.

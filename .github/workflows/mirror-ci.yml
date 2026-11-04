@@ -17,35 +17,5 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Enforce public-tree privacy boundary
-        run: python scripts/validate_public_tree.py
-
-      - name: Compile extracted implementation
-        run: python -m py_compile scripts/*.py
-
-      - name: Recheck privacy boundary after bytecode compilation
-        run: python scripts/validate_public_tree.py
-
-      - name: Validate reusable documentation contract
-        run: python scripts/validate_docs.py
-
-      - name: Validate onboarding contract
-        run: python scripts/validate_onboarding.py
-
-      - name: Validate template first-run UX
-        run: python scripts/validate_first_run.py
-
-      - name: Validate public release structure
-        run: python scripts/validate_release.py
-
-      - name: Validate Storage protocol
-        run: python scripts/validate_file_upload.py
-
-      - name: Validate Saved Search support
-        run: python scripts/validate_saved_searches.py
-
-      - name: Validate annotation write boundary
-        run: python scripts/validate_annotations.py
-
-      - name: Validate rich annotation-note serialization
-        run: python scripts/validate_annotation_notes.py
+      - name: Validate reusable upstream (offline)
+        run: python scripts/validate_project.py

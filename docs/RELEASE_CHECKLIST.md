@@ -1,50 +1,43 @@
-# v0.1.0 public release checklist
+# Public template and tagged-release checklist
 
-**Public publication is blocked until every gate is satisfied.**
+## Public template publication — historical evidence
 
-## Source and history
+The reusable public repository was created on 2026-11-04 from an independent
+Git root, rather than publishing the previous private development history.
+The initial root commit was `274ad9089f1145e5116c36526fa0d13ec23c6221`.
+The new upstream CI run
+[41815575004](https://github.com/Charlie-Wang-03/zotero-mirror/actions/runs/41815575004)
+completed successfully. These are **observations**, not proof that all
+Zotero Web API paths are end-to-end verified.
 
-- [ ] Prepare generic source tree, safe defaults, documentation and MIT license.
-- [ ] Confirm `library/` and `write_requests/` contain only README placeholders.
-- [ ] Confirm example annotations and saved searches are synthetic.
-- [ ] Scan all source files for secrets, user IDs, personal tags, paper titles,
-      production repository identifiers and copyrighted full-text content.
-- [ ] Verify public upstream CI succeeds, including negative/synthetic tests.
-- [ ] Confirm no repo-owned secret values are copied to the release.
-- [ ] Create **a new repository with an independent initial commit** from the
-      clean source tree. **Do not convert the historic private development repo
-      to Public.** Its prior Git commits and workflow logs are not part of
-      the release artifact.
-- [ ] Check the new repository contains one new root commit, only the expected
-      default branch, and no inherited development history or workflow logs.
-- [ ] Scan the new public candidate's entire reachable history before making
-      it Public.
+Privacy and source-tree constraints remain active after publication:
 
-## Deployment behavior
+- Never commit a real `library/**` snapshot or write receipts to public upstream.
+- Keep only synthetic fixtures; no API keys, account identifiers, real notes,
+  restricted full text, or private development history.
+- A real mirror instance must be **Private** and start `read_only`.
+- Changes touching Zotero write behavior need version-guard and post-write
+  verification review in addition to the offline suite.
 
-- [ ] Public template repo runs no live Zotero operation by default.
-- [ ] First Run refuses a public *instance* and checks private, default branch,
-      user identity, read-only key and strict snapshot consistency.
-- [ ] Sync requires explicit `ZOTERO_MIRROR_ENABLED=true`.
-- [ ] Scheduled sync is available to generated private instances.
-- [ ] Optional writes require a separate read-write key and a short-lived
-      session; destructive writes remain disabled by default.
-- [ ] Public-upstream CI is skipped in generated private instances.
-- [ ] README documents unsupported/native-Desktop-only operations.
-- [ ] No secret values, personal identifiers, or real library snapshots in
-      GitHub Actions logs or fixtures.
+## Before creating a tagged Release
 
-## Publication
-
-- [ ] Set repository visibility to Public **only after clean-root audit**.
-- [ ] Keep GitHub Template repository enabled.
-- [ ] Enable appropriate security reporting and community settings.
-- [ ] Tag and document the initial release only after all gates pass.
-- [ ] Independently verify the public URL without authentication.
+- [ ] Confirm maintainer approval for the tag and Release.
+- [ ] Identify the exact target commit and check its public-source CI.
+- [ ] Run `python scripts/validate_project.py` and inspect the resulting diff.
+- [ ] Review all modified files, Git history and packaged artifacts for private
+      content, licenses, generated data and accidental credentials.
+- [ ] Check README and `docs/VALIDATION.md` accurately distinguish synthetic
+      tests, past isolated canary tests and genuinely verified live paths.
+- [ ] Confirm defaults remain `read_only`, destructive writes disabled,
+      real-library workflows private-only and recurring sync opt-in.
+- [ ] Confirm no user-instance credentials or data are included in artifacts.
+- [ ] Only then create the tag and Release, clearly listing limitations.
+- [ ] Verify the published tag, source archive and public URL independently.
 
 ## Evidence boundaries
 
-The previous private canary validated read-only First Run and two isolated
-create/read/patch/delete cycles. It did **not** validate every feature or
-full request-queue/receipt orchestration. Do not overstate coverage in a
-public announcement.
+The previous isolated private canary validated First Run plus two
+create/read/patch/delete cycles. It did **not** establish complete
+end-to-end validation of PDF uploads, annotations, Saved Searches,
+or the full request-queue/receipt orchestration. See
+[Validation and limitations](VALIDATION.md).
