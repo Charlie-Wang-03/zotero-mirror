@@ -1,0 +1,79 @@
+name: Manage Zotero Access Mode
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Target Zotero write mode"
+        required: true
+        default: "read_only"
+        type: choice
+        options:
+          - read_only
+          - read_write
+      minutes:
+        description: "Read-write session duration; ignored for read_only"
+        required: true
+        default: "60"
+        type: choice
+        options:
+          - "15"
+          - "30"
+          - "60"
+          - "120"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: zotero-library
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      INSTANCE_REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Refuse public instance repositories
+        run: |
+          if [ "$INSTANCE_REPOSITORY_PRIVATE" != "true" ]; then
+            echo "::error::Write mode cannot be enabled in a public repository."
+            exit 1
+          fi
+
+      - name: Enforce write-feature gate
+        if: inputs.mode == 'read_write'
+        env:
+          ZOTERO_WRITE_ENABLED: ${{ vars.ZOTERO_WRITE_ENABLED }}
+        run: |
+          if [ "$ZOTERO_WRITE_ENABLED" != "true" ]; then
+            echo "::error::Set repository variable ZOTERO_WRITE_ENABLED=true before opening a write session."
+            exit 1
+          fi
+
+      - name: Update access mode
+        run: |
+          python scripts/set_access_mode.py \
+            --mode "${{ inputs.mode }}" \
+            --minutes "${{ inputs.minutes }}"
+
+      - name: Commit access-mode change
+        run: |
+          git add config/access_mode.json
+          if git diff --cached --quiet; then
+            echo "Access mode already matches the requested state."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: set Zotero access mode to ${{ inputs.mode }}"
+          git fetch origin "${GITHUB_REF_NAME}"
+          git rebase "origin/${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

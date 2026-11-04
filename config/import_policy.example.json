@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "default_reading_tag": "/unread",
+  "classification_confidence_threshold": 0.75,
+  "metadata_confidence_threshold": 0.9,
+  "unclassified_collection_key": "",
+  "unclassified_collection_path": "Inbox / Unclassified",
+  "metadata_verification_collection_key": "",
+  "metadata_verification_collection_path": "Inbox / Metadata Review",
+  "reuse_existing_tags_only": true,
+  "allow_automatic_collection_creation": false,
+  "max_automatic_collections": 4,
+  "duplicate_policy": "reject",
+  "duplicate_title_normalization": true
+}

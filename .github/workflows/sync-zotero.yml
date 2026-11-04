@@ -1,0 +1,75 @@
+name: Sync Zotero
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */3 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: zotero-library
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: ${{ vars.ZOTERO_MIRROR_ENABLED == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      ZOTERO_USER_ID: ${{ vars.ZOTERO_USER_ID }}
+      ZOTERO_API_BASE: https://api.zotero.org
+      INSTANCE_REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Refuse public instance repositories
+        run: |
+          if [ "$INSTANCE_REPOSITORY_PRIVATE" != "true" ]; then
+            echo "::error::A real Zotero mirror must run in a private repository."
+            exit 1
+          fi
+
+      - name: Verify read-only configuration
+        env:
+          ZOTERO_API_KEY: ${{ secrets.ZOTERO_API_KEY_READONLY }}
+          REQUIRE_READ_ONLY: "true"
+          REQUIRE_NOTES: "true"
+          REQUIRE_FILES: "true"
+        run: |
+          if [ -z "$ZOTERO_USER_ID" ]; then
+            echo "::error::Missing repository variable ZOTERO_USER_ID"
+            exit 1
+          fi
+          if [ -z "$ZOTERO_API_KEY" ]; then
+            echo "::error::Missing Actions secret ZOTERO_API_KEY_READONLY"
+            exit 1
+          fi
+          python scripts/check_zotero_key.py
+
+      - name: Collect and reconcile Zotero snapshot
+        env:
+          ZOTERO_API_KEY: ${{ secrets.ZOTERO_API_KEY_READONLY }}
+        run: |
+          python -m py_compile scripts/sync_zotero.py scripts/sync_guard.py scripts/validate_mirror.py
+          python scripts/sync_guard.py
+          python scripts/validate_mirror.py --strict
+
+      - name: Commit verified mirror when changed
+        run: |
+          git add -A library
+          if git diff --cached --quiet; then
+            echo "Mirror already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: sync verified Zotero snapshot"
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main

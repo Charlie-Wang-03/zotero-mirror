@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "max_bytes": 104857600,
+  "require_https": true,
+  "require_public_dns": true,
+  "require_pdf_magic": true,
+  "require_identity_verified": true,
+  "allowed_content_types": [
+    "application/pdf",
+    "application/octet-stream",
+    "binary/octet-stream"
+  ]
+}

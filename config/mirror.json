@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "zotero_user_id": "",
+  "zotero_api_base": "https://api.zotero.org",
+  "output_dir": "library",
+  "snapshot_retries": 3,
+  "snapshot_retry_delay_seconds": 5,
+  "scheduled_sync_hours": 3,
+  "stale_after_hours": 4,
+  "secret_name": "ZOTERO_API_KEY_READONLY"
+}

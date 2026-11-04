@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "zotero_api_version": 3,
+  "capabilities": {
+    "pdf_storage_upload": {
+      "verdict": "SUPPORTED_BY_WEB_API",
+      "enabled": true,
+      "contract": "Zotero Web API v3 full file-upload protocol"
+    },
+    "annotation_write": {
+      "verdict": "PARTIALLY_SUPPORTED",
+      "enabled": true,
+      "contract_status": "undocumented_but_live_verified",
+      "supported_types": [
+        "note",
+        "highlight",
+        "underline"
+      ],
+      "geometry_modes": [
+        "existing_synchronized_annotation"
+      ],
+      "contract": "Generic Web API item creation is permitted only with exact trusted geometry. Text-only coordinate fabrication is forbidden."
+    },
+    "annotation_to_note": {
+      "verdict": "PARTIALLY_SUPPORTED",
+      "enabled": true,
+      "richness": "PARTIAL_RICH_NOTE",
+      "contract": "Web API note writes plus Zotero Desktop data-annotation/data-citation HTML structure; not claimed as a native server-side Add Note from Annotations endpoint."
+    },
+    "duplicate_merge": {
+      "verdict": "DESKTOP_ONLY",
+      "enabled": false,
+      "contract": "No native Web API merge endpoint is exposed; pseudo-merge is forbidden."
+    },
+    "saved_searches": {
+      "verdict": "SUPPORTED_BY_WEB_API",
+      "enabled": true,
+      "web_api_executes_results": false,
+      "contract": "Native Saved Search metadata CRUD; Web API exposes saved-search metadata and criteria, not result execution."
+    }
+  }
+}

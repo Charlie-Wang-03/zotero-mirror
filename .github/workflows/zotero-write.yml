@@ -1,0 +1,113 @@
+name: Zotero Write
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "write_requests/pending/*.json"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: zotero-library
+  cancel-in-progress: false
+
+jobs:
+  write:
+    if: ${{ vars.ZOTERO_MIRROR_ENABLED == 'true' && vars.ZOTERO_WRITE_ENABLED == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      ZOTERO_USER_ID: ${{ vars.ZOTERO_USER_ID }}
+      ZOTERO_API_BASE: https://api.zotero.org
+      INSTANCE_REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Refuse public instance repositories
+        run: |
+          if [ "$INSTANCE_REPOSITORY_PRIVATE" != "true" ]; then
+            echo "::error::Zotero writes are disabled in public repositories."
+            exit 1
+          fi
+
+      - name: Verify read-only verification key before mutation
+        env:
+          ZOTERO_API_KEY: ${{ secrets.ZOTERO_API_KEY_READONLY }}
+          REQUIRE_READ_ONLY: "true"
+          REQUIRE_NOTES: "true"
+          REQUIRE_FILES: "true"
+        run: |
+          if [ -z "$ZOTERO_USER_ID" ]; then
+            echo "::error::Missing repository variable ZOTERO_USER_ID"
+            exit 1
+          fi
+          if [ -z "$ZOTERO_API_KEY" ]; then
+            echo "::error::Missing Actions secret ZOTERO_API_KEY_READONLY"
+            exit 1
+          fi
+          python scripts/check_zotero_key.py
+
+      - name: Verify read-write key before mutation
+        env:
+          ZOTERO_API_KEY: ${{ secrets.ZOTERO_API_KEY_READWRITE }}
+          REQUIRE_WRITE: "true"
+          REQUIRE_NOTES: "true"
+          REQUIRE_FILES: "true"
+        run: |
+          if [ -z "$ZOTERO_API_KEY" ]; then
+            echo "::error::Missing Actions secret ZOTERO_API_KEY_READWRITE"
+            exit 1
+          fi
+          python scripts/check_zotero_key.py
+
+      - name: Execute one audited Zotero write
+        id: write
+        env:
+          ZOTERO_API_KEY: ${{ secrets.ZOTERO_API_KEY_READWRITE }}
+        run: |
+          python scripts/zotero_write.py
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+          obj = json.loads(Path("write_requests/last_run.json").read_text(encoding="utf-8"))
+          print("status=" + str(obj.get("status", "unknown")))
+          PY
+
+      - name: Verify through read-only credentials
+        id: refresh
+        if: steps.write.outputs.status == 'success'
+        env:
+          ZOTERO_API_KEY: ${{ secrets.ZOTERO_API_KEY_READONLY }}
+          REQUIRE_READ_ONLY: "true"
+          REQUIRE_NOTES: "true"
+          REQUIRE_FILES: "true"
+        run: |
+          python scripts/check_zotero_key.py
+          python scripts/sync_guard.py
+          python scripts/validate_mirror.py --strict
+          python scripts/validate_post_write.py
+
+      - name: Commit receipt and trusted mirror state
+        if: always()
+        run: |
+          git add -A write_requests
+          if [ "${{ steps.write.outputs.status }}" = "success" ] && [ "${{ steps.refresh.outcome }}" = "success" ]; then
+            git add -A library
+          else
+            git restore --worktree --staged library 2>/dev/null || true
+          fi
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: record Zotero write transaction"
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main

@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "mode": "read_only",
+  "read_write_session_minutes": 60,
+  "activated_at": null,
+  "expires_at": null,
+  "allow_destructive": false,
+  "destructive_confirmation_phrase": "CONFIRM_DESTRUCTIVE_ZOTERO_WRITE",
+  "read_write_secret_name": "ZOTERO_API_KEY_READWRITE"
+}

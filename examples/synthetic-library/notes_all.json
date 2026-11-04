@@ -1,0 +1,9 @@
+[
+  {
+    "key": "NOTE0001",
+    "version": 1,
+    "parentItem": "ITEM0001",
+    "noteText": "Synthetic rich annotation note.",
+    "noteHtml": "<div data-schema-version=\"10\"><p><span class=\"highlight\" data-annotation=\"%7B%22attachmentURI%22%3A%22http%3A%2F%2Fzotero.org%2Fusers%2F123%2Fitems%2FATT00001%22%2C%22annotationKey%22%3A%22ANN00001%22%7D\">“synthetic highlighted text”</span></p></div>"
+  }
+]

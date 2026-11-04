@@ -1,0 +1,46 @@
+name: Instance Preflight
+
+on:
+  workflow_dispatch:
+    inputs:
+      check_write:
+        description: "Also verify the optional read-write setup"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      ZOTERO_USER_ID: ${{ vars.ZOTERO_USER_ID }}
+      ZOTERO_MIRROR_ENABLED: ${{ vars.ZOTERO_MIRROR_ENABLED }}
+      ZOTERO_WRITE_ENABLED: ${{ vars.ZOTERO_WRITE_ENABLED }}
+      ZOTERO_API_KEY_READONLY: ${{ secrets.ZOTERO_API_KEY_READONLY }}
+      ZOTERO_API_KEY_READWRITE: ${{ secrets.ZOTERO_API_KEY_READWRITE }}
+      INSTANCE_REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Compile onboarding tools
+        run: python -m py_compile scripts/instance_doctor.py scripts/check_zotero_key.py scripts/set_access_mode.py
+
+      - name: Validate instance configuration
+        shell: bash
+        run: |
+          args=(--online)
+          if [ "${{ inputs.check_write }}" = "true" ]; then
+            args+=(--check-write)
+          fi
+          python scripts/instance_doctor.py "${args[@]}"

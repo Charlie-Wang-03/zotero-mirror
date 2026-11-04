@@ -1,0 +1,102 @@
+name: First Run
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: zotero-library
+  cancel-in-progress: false
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      ZOTERO_USER_ID: ${{ vars.ZOTERO_USER_ID }}
+      ZOTERO_API_BASE: https://api.zotero.org
+      INSTANCE_REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+      INSTANCE_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Refuse unsafe deployment targets
+        shell: bash
+        run: |
+          if [ "$INSTANCE_REPOSITORY_PRIVATE" != "true" ]; then
+            echo "::error::A real Zotero mirror must run in a private repository."
+            exit 1
+          fi
+          if [ "$GITHUB_REF_NAME" != "$INSTANCE_DEFAULT_BRANCH" ]; then
+            echo "::error::Run First Run from the repository default branch."
+            exit 1
+          fi
+
+      - name: Validate read-only instance configuration
+        env:
+          ZOTERO_API_KEY_READONLY: ${{ secrets.ZOTERO_API_KEY_READONLY }}
+          ZOTERO_WRITE_ENABLED: "false"
+          INSTANCE_REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+        run: |
+          python -m py_compile \
+            scripts/instance_doctor.py \
+            scripts/sync_guard.py \
+            scripts/validate_mirror.py
+          python scripts/instance_doctor.py --online
+
+      - name: Build first trusted mirror
+        env:
+          ZOTERO_API_KEY: ${{ secrets.ZOTERO_API_KEY_READONLY }}
+        run: |
+          python scripts/sync_guard.py
+          python scripts/validate_mirror.py --strict
+
+      - name: Commit first trusted mirror
+        run: |
+          git add -A library
+          if git diff --cached --quiet; then
+            echo "Mirror already matches the trusted Zotero snapshot."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: initialize verified Zotero mirror"
+          git fetch origin "$GITHUB_REF_NAME"
+          git rebase "origin/$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
+
+      - name: First-run success summary
+        if: success()
+        run: |
+          {
+            echo "## zotero-mirror first run complete"
+            echo
+            echo "- Private repository: verified"
+            echo "- Dedicated read-only Zotero key: verified"
+            echo "- Zotero user identity: verified"
+            echo "- First trusted mirror: generated and validated"
+            echo
+            echo "### Next step"
+            echo 'Set repository variable `ZOTERO_MIRROR_ENABLED=true` to enable manual and scheduled Sync Zotero runs.'
+            echo
+            echo "Optional write support stays disabled until you configure a separate read-write key."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: First-run failure summary
+        if: failure()
+        run: |
+          {
+            echo "## zotero-mirror first run did not complete"
+            echo
+            echo "No successful first-run completion was recorded."
+            echo "Fix the failed step, then rerun **First Run**."
+            echo
+            echo 'Do not enable `ZOTERO_MIRROR_ENABLED` until First Run succeeds.'
+          } >> "$GITHUB_STEP_SUMMARY"
