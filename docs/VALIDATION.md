@@ -58,3 +58,26 @@ configured instance; a skipped verification is not a pass of that operation.
 
 Green CI means these reproducible checks passed, **not** that a real user
 completed onboarding or that every API-dependent feature is live-verified.
+
+## GitHub Actions runtime and supply-chain boundary
+
+All six upstream/template workflows use immutable commit pins for GitHub's
+`actions/checkout` **v7.0.1** (`3d3c42e5aac5ba805825da76410c181273ba90b1`)
+and `actions/setup-python` **v7.1.0**
+(`6d4fd22b20465ccc0f7354476588e8df7c9ca0e0`). Their upstream release tags were
+resolved against the official `actions/checkout` and `actions/setup-python`
+repositories on 2026-11-04. Both use Node.js 24 and document a minimum
+GitHub Actions Runner version of **2.327.1**; checkout notes that authenticated
+Git operations from Docker container actions require at least **2.329.0**.
+The last inspected GitHub-hosted `ubuntu-24.04` runner was **2.338.2**.
+
+The offline documentation contract checks these pins across all six workflow
+files; upstream CI executes those checks. The GitHub-hosted CI job additionally
+checks out this repository and sets up Python using these pinned actions.
+**Private template-instance** workflows use the same versions but are not
+executed against a live Zotero account by upstream CI. In particular, the
+First Run, scheduled sync, mode-change and credentialed write/commit/push paths
+have not been rerun against a real private Zotero instance with these exact
+Action versions. Earlier real First Run, sync and isolated write tests remain
+valid historical functional evidence. A new private canary is optional, not
+a mandatory gate for this narrowly scoped dependency update.
