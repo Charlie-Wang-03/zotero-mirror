@@ -77,4 +77,7 @@ checks out this repository and sets up Python using these pinned actions.
 **Private template-instance** workflows use the same versions but are not
 executed against a live Zotero account by upstream CI. In particular, the
 First Run, scheduled sync, mode-change and credentialed write/commit/push paths
-still require separate real private-instance acceptance after this update.
+have not been rerun against a real private Zotero instance with these exact
+Action versions. Earlier real First Run, sync and isolated write tests remain
+valid historical functional evidence. A new private canary is optional, not
+a mandatory gate for this narrowly scoped dependency update.
