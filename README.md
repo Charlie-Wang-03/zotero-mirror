@@ -1,17 +1,20 @@
 # zotero-mirror
 
+[简体中文](README.zh-CN.md)
+
 **Private-by-default Zotero ↔ GitHub mirror for AI-assisted research workflows.**
 
-> **Release status: v0.1.0 release candidate.** This repository contains
-> reusable source code and synthetic fixtures only. Public distribution
-> requires a clean independent Git root and completed release checks.
-> This is an unofficial community project, not affiliated with Zotero.
+> **Public source template.** This repository contains reusable code and synthetic
+> fixtures, not anyone's Zotero library. It is an unofficial community project,
+> not affiliated with Zotero, and **not** a Zotero Desktop extension.
 
 Zotero remains the canonical library. A private repository created from this
 template maintains a versioned, AI-readable projection of metadata, notes,
 annotations, attachment metadata and indexed full text.
 
 ## Get started
+
+[Use this template](https://github.com/Charlie-Wang-03/zotero-mirror/generate) to create a **private repository** for your own library. No local clone is required for the normal setup.
 
 ```text
 Use this template
@@ -63,6 +66,18 @@ Search path. See [Validation and limitations](docs/VALIDATION.md).
   personal identifiers, write receipts or API keys.
 - Public-template regression checks are intentionally skipped in private
   instances; each operational workflow performs its own checks.
+
+## Validate the public source
+
+With Python 3.13 and no third-party packages:
+
+```bash
+python scripts/validate_project.py
+```
+
+This runs offline syntax, privacy-boundary, onboarding and synthetic feature
+checks. It does **not** test a live Zotero account or establish full end-to-end
+write capability. See [Validation and limitations](docs/VALIDATION.md).
 
 ## Project documentation
 

@@ -2,6 +2,15 @@
 
 Repository-level contract for coding agents, reviewers and maintainers.
 
+## Read first
+
+- `README.md` for the public use case and capability limits;
+- `docs/QUICKSTART.md` for private-instance onboarding;
+- `docs/VALIDATION.md` and `SECURITY.md` when touching behavior or security;
+- the relevant script or workflow for the task. Avoid loading unrelated docs.
+
+The [Agentic Engineering Preferences](https://github.com/Charlie-Wang-03/agentic-engineering-preferences) are secondary maintainer defaults. Repository-local invariants and observed behavior take precedence.
+
 ## Product boundary
 
 `zotero-mirror` is reusable, private-by-default infrastructure.
@@ -43,23 +52,35 @@ Do not ask users to paste API keys into chat or commit them to source.
 
 ## Public release hygiene
 
-Before public distribution, run the complete upstream CI, validate every
-tracked source path and all reachable commits, and publish from a **new clean
-Git root**. Do not change a historical private development repository to
-Public. GitHub may expose its entire commit history and Actions logs.
+The public template was created from an independent Git root. Keep this
+upstream free of real Zotero instance data and private-history content.
+Before future tags, exports or other external handoffs, inspect the changed
+source, artifacts, reachable history and claims. A green offline CI result
+is not proof of live Zotero operation or safe publication of private data.
 
-Do not copy production `library/**`, personal receipts, nonpublic test
-records or original production history into the distributable source tree.
+Do not copy production `library/**`, private receipts, nonpublic test
+records or private Git history into this repository.
+
+## Local validation
+
+```bash
+python scripts/validate_project.py
+```
+
+This is the reproducible **offline upstream** validation command (Python 3.13,
+standard library). It is also called by the upstream CI. Do not run this
+public-tree validator on a configured private instance containing legitimate
+`library/**` data; instance workflows have their own safety checks.
 
 ## Development flow
 
 ```text
 generic change
-→ synthetic regression tests
-→ public-tree privacy validator
+→ local offline validation
+→ focused branch / PR
 → upstream CI
-→ release checklist
-→ independent clean-root publication
+→ inspect diff and safety boundaries
+→ explicit approval before release or high-impact action
 ```
 
 Upstream-only `validate_public_tree.py` is not a correctness validator for a
@@ -69,3 +90,17 @@ configured private instance, where legitimate `library/**` is expected.
 
 Creating a Zotero PDF annotation requires exact trusted page geometry.
 Never invent rectangles solely from text matches.
+
+## High-risk operations
+
+Require explicit maintainer authorization for release/tag creation, repository
+visibility or permission changes, branch protection or rulesets, force pushes,
+history rewrites, credential operations, and destructive migrations. Never
+execute a live Zotero write as part of upstream tests.
+
+## Definition of done
+
+Inspect the complete diff, run the relevant offline validation, verify that no
+private data or credentials were introduced, keep README claims aligned with
+evidence, and document any checks that were not performed. Prefer reversible
+changes and do not auto-merge substantial agent-generated PRs.

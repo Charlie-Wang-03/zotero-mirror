@@ -23,6 +23,7 @@ def main() -> int:
     errors: list[str] = []
     required = [
         "README.md",
+        "README.zh-CN.md",
         "AGENTS.md",
         "SECURITY.md",
         "CONTRIBUTING.md",
@@ -45,6 +46,7 @@ def main() -> int:
             errors.append(f"missing required file: {rel}")
 
     require_text("README.md", "Private-by-default", errors)
+    require_text("README.md", "[简体中文](README.zh-CN.md)", errors)
     require_text("README.md", "First Run", errors)
     require_text("AGENTS.md", "read_only", errors)
     require_text("SECURITY.md", "ZOTERO_API_KEY_READONLY", errors)
@@ -88,12 +90,26 @@ def main() -> int:
         errors.append("write workflow must use generic read-write secret")
     if "github.repository == 'Charlie-Wang-03/zotero-mirror'" not in ci:
         errors.append("Upstream CI must be disabled in generated instance repositories")
-    if "validate_public_tree.py" not in ci:
-        errors.append("Upstream CI must enforce public-tree privacy validation")
-    if "validate_onboarding.py" not in ci:
-        errors.append("Mirror CI must validate onboarding contracts")
-    if "validate_first_run.py" not in ci:
-        errors.append("Mirror CI must validate first-run template UX")
+    if "python scripts/validate_project.py" not in ci:
+        errors.append("Upstream CI must call the canonical offline validation command")
+    suite_path = ROOT / "scripts" / "validate_project.py"
+    if not suite_path.exists():
+        errors.append("missing canonical offline validation runner")
+    else:
+        suite = suite_path.read_text(encoding="utf-8")
+        for required_validator in (
+            "validate_public_tree.py",
+            "validate_docs.py",
+            "validate_onboarding.py",
+            "validate_first_run.py",
+            "validate_release.py",
+            "validate_file_upload.py",
+            "validate_saved_searches.py",
+            "validate_annotations.py",
+            "validate_annotation_notes.py",
+        ):
+            if required_validator not in suite:
+                errors.append(f"canonical validation runner missing {required_validator}")
 
     if errors:
         for error in errors:
