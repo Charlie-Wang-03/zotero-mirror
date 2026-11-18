@@ -9,7 +9,7 @@ Repository-level contract for coding agents, reviewers and maintainers.
 - `docs/VALIDATION.md` and `SECURITY.md` when touching behavior or security;
 - the relevant script or workflow for the task. Avoid loading unrelated docs.
 
-The [Agentic Engineering Preferences](https://github.com/Charlie-Wang-03/agentic-engineering-preferences) are secondary maintainer defaults. Repository-local invariants and observed behavior take precedence.
+Base changes on this repository’s documented invariants and observed behavior. Keep changes focused and validate them with the checks below.
 
 ## Product boundary
 
